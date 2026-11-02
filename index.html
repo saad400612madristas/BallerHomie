@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baller Homie - Your AI Football Companion</title>
+  <style>
+    /* Reset & Base Variables */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #0a0e14;
+      --bg-sidebar: #0f151e;
+      --bg-card: #151d28;
+      --bg-card-hover: #1b2533;
+      --bg-user-bubble: #1f3328;
+      --bg-bot-bubble: #141c26;
+      --accent-green: #10b981;
+      --accent-green-glow: rgba(16, 185, 129, 0.25);
+      --accent-emerald: #059669;
+      --accent-cyan: #06b6d4;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border-color: #212e3f;
+      --border-focus: #10b981;
+      --danger: #ef4444;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* App Layout */
+    .app-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* Sidebar Styling */
+    .sidebar {
+      width: 280px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform 0.3s ease, width 0.3s ease;
+      z-index: 50;
+    }
+
+    .sidebar-header {
+      padding: 1.25rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      box-shadow: 0 4px 12px var(--accent-green-glow);
+    }
+
+    .brand-text h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .brand-text span {
+      font-size: 0.7rem;
+      color: var(--accent-green);
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .new-chat-btn {
+      margin: 1rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .new-chat-btn:hover {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.25));
+      border-color: var(--accent-green);
+      transform: translateY(-1px);
+    }
+
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0.75rem 1rem 0.75rem;
+    }
+
+    .chat-history::-webkit-scrollbar {
+      width: 4px;
+    }
+    .chat-history::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    .history-section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 0.5rem 0.4rem 0.5rem;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .history-item:hover, .history-item.active {
+      background-color: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .history-item svg {
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    /* Sidebar Footer / Creator Credentials */
+    .sidebar-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      background-color: rgba(10, 14, 20, 0.6);
+    }
+
+    .creator-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+    }
+
+    .creator-avatar {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+    }
+
+    .creator-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .creator-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .verified-badge {
+      color: #38bdf8;
+      display: inline-flex;
+    }
+
+    .creator-title {
+      font-size: 0.7rem;
+      color: var(--accent-green);
+    }
+
+    /* Main Chat Section */
+    .main-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+      background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.04), transparent 40%),
+                  radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.03), transparent 30%),
+                  var(--bg-dark);
+    }
+
+    /* Chat Top Bar */
+    .chat-topbar {
+      height: 60px;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 21, 30, 0.7);
+      backdrop-filter: blur(12px);
+      z-index: 30;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .menu-toggle-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-main);
+      cursor: pointer;
+      padding: 0.4rem;
+      border-radius: 6px;
+    }
+
+    .bot-status-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .action-icon-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-icon-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent-green);
+    }
+
+    /* Messages Container */
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 1rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .messages-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .messages-container::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 6px;
+    }
+
+    .messages-inner {
+      max-width: 840px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Empty Welcome Screen */
+    .welcome-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2.5rem 1rem 1rem 1rem;
+      max-width: 760px;
+      margin: 0 auto;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .welcome-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+      border: 2px solid var(--accent-green);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 8px 24px var(--accent-green-glow);
+    }
+
+    .welcome-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .welcome-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+
+    .author-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--accent-green);
+      font-size: 0.8rem;
+      border-radius: 20px;
+      margin-bottom: 2rem;
+      font-weight: 600;
+    }
+
+    /* Prompt Suggestions Grid */
+    .suggestion-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.85rem;
+      width: 100%;
+    }
+
+    .suggestion-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .suggestion-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-green);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .suggestion-card .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .suggestion-card .card-desc {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    /* Chat Message Bubbles */
+    .message-row {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      animation: messageSlideIn 0.25s ease-out;
+    }
+
+    @keyframes messageSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.1rem;
+    }
+
+    .message-avatar.bot {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      box-shadow: 0 3px 10px var(--accent-green-glow);
+    }
+
+    .message-avatar.user {
+      background: #3b82f6;
+    }
+
+    .message-content-wrapper {
+      max-width: 82%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .message-bubble {
+      padding: 1rem 1.25rem;
+      border-radius: 14px;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      word-break: break-word;
+      position: relative;
+    }
+
+    .message-row.user .message-bubble {
+      background: linear-gradient(135deg, #064e3b, #047857);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .message-row.bot .message-bubble {
+      background-color: var(--bg-bot-bubble);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Message Meta & Action Buttons */
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      padding: 0 0.25rem;
+    }
+
+    .message-row.user .message-meta {
+      justify-content: flex-end;
+    }
+
+    .message-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .message-row:hover .message-actions {
+      opacity: 1;
+    }
+
+    .msg-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .msg-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+    }
+
+    /* Formatted Content inside Bot Message */
+    .message-bubble p {
+      margin-bottom: 0.7rem;
+    }
+    .message-bubble p:last-child {
+      margin-bottom: 0;
+    }
+
+    .message-bubble strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .message-bubble ul {
+      margin: 0.5rem 0 0.75rem 1.25rem;
+    }
+
+    .message-bubble li {
+      margin-bottom: 0.35rem;
+    }
+
+    /* Typing Animation */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0.5rem 0.25rem;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    .typing-dot:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Bottom Input Bar Area */
+    .chat-input-area {
+      padding: 0.85rem 1.5rem 1.25rem 1.5rem;
+      background: linear-gradient(to top, var(--bg-dark) 80%, transparent);
+      z-index: 20;
+    }
+
+    .input-wrapper {
+      max-width: 840px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .input-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 0.65rem 0.85rem 0.65rem 1.25rem;
+      display: flex;
+      align-items: flex-end;
+      gap: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-box:focus-within {
+      border-color: var(--accent-green);
+      box-shadow: 0 4px 20px var(--accent-green-glow);
+    }
+
+    .chat-textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: none;
+      max-height: 160px;
+      min-height: 24px;
+      line-height: 1.5;
+      padding: 0.35rem 0;
+    }
+
+    .chat-textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-emerald));
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .send-btn:disabled {
+      background: var(--bg-card-hover);
+      color: var(--text-dim);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .send-btn:not(:disabled):hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 10px var(--accent-green-glow);
+    }
+
+    /* Disclaimer & Credentials Under Input */
+    .input-disclaimer {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 0.6rem;
+    }
+
+    .input-disclaimer strong {
+      color: var(--text-main);
+    }
+
+    /* Quick Quick Tags Pill Carousel */
+    .quick-tags-container {
+      max-width: 840px;
+      margin: 0 auto 0.65rem auto;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .quick-tags-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-tag {
+      background: rgba(21, 29, 40, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .quick-tag:hover {
+      border-color: var(--accent-green);
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+
+    /* Overlay for Mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 45;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 85px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card);
+      border: 1px solid var(--accent-green);
+      color: var(--text-main);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .menu-toggle-btn {
+        display: flex;
+      }
+
+      .message-content-wrapper {
+        max-width: 90%;
+      }
+
+      .chat-topbar {
+        padding: 0 1rem;
+      }
+
+      .chat-input-area {
+        padding: 0.65rem 1rem 1rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar Overlay for mobile screen -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="brand">
+          <div class="brand-logo">⚽</div>
+          <div class="brand-text">
+            <h1>Baller Homie</h1>
+            <span>AI FOOTBALL CHATBOT</span>
+          </div>
+        </a>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>New Football Chat</span>
+      </button>
+
+      <div class="chat-history">
+        <div class="history-section-title">Trending Debates</div>
+        <div class="history-item active" data-prompt="Who is the true GOAT: Messi or Ronaldo?">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>🐐 Messi vs Ronaldo Debate</span>
+        </div>
+        <div class="history-item" data-prompt="How many Champions Leagues does Real Madrid have?">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>🏆 Real Madrid UCL Record</span>
+        </div>
+        <div class="history-item" data-prompt="Can Arsenal or Man City win the Premier League?">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>⚡ Premier League Title Race</span>
+        </div>
+        <div class="history-item" data-prompt="What is the offside rule in football? Explain simply">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>📖 Offside Rule Explained</span>
+        </div>
+        <div class="history-item" data-prompt="Who is better right now: Kylian Mbappe or Erling Haaland?">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>🤖 Haaland vs Mbappe</span>
+        </div>
+      </div>
+
+      <!-- Creator Credentials Section -->
+      <div class="sidebar-footer">
+        <div class="creator-card">
+          <div class="creator-avatar">SS</div>
+          <div class="creator-info">
+            <div class="creator-name">
+              Shaikh Saad
+              <span class="verified-badge" title="Creator Verified">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="creator-title">Website Creator & Lead Dev</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Chat View -->
+    <main class="main-chat">
+      <!-- Top Navigation Bar -->
+      <header class="chat-topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle-btn" id="menuToggleBtn" title="Toggle Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="bot-status-tag">
+            <div class="status-dot"></div>
+            <span><strong>Baller Homie AI</strong> • Focused 100% on Football</span>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="action-icon-btn" id="clearChatBtn" title="Clear Chat">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+          <button class="action-icon-btn" id="soundToggleBtn" title="Audio Feedback Toggle">
+            <span id="soundIcon">🔊</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Message History Area -->
+      <div class="messages-container" id="messagesContainer">
+        <div class="messages-inner" id="messagesInner">
+          <!-- Initial Welcome Screen -->
+          <div class="welcome-container" id="welcomeScreen">
+            <div class="welcome-icon">⚽</div>
+            <h2 class="welcome-title">Yo, Baller! What's on your mind? 🔥</h2>
+            <p class="welcome-subtitle">
+              Welcome to <strong>Baller Homie</strong>, your dedicated football companion. Ask me any football question, compare players, discuss match tactics, or debate the GOATs!
+            </p>
+            <div class="author-pill">
+              <span>⚡ Created by Shaikh Saad</span>
+            </div>
+
+            <div class="suggestion-grid">
+              <div class="suggestion-card" data-prompt="Who is the true GOAT: Lionel Messi or Cristiano Ronaldo?">
+                <div class="card-title">🐐 Messi vs Ronaldo Debate</div>
+                <div class="card-desc">Honest stats, trophies, and the ultimate homie breakdown.</div>
+              </div>
+
+              <div class="suggestion-card" data-prompt="How many Champions League trophies does Real Madrid have?">
+                <div class="card-title">👑 Real Madrid UCL Trophies</div>
+                <div class="card-desc">The official count and history of the European kings.</div>
+              </div>
+
+              <div class="suggestion-card" data-prompt="What does Gegenpressing mean in football?">
+                <div class="card-title">🧠 Tactical Concepts</div>
+                <div class="card-desc">Gegenpress, False 9, and Inverted Fullbacks explained simply.</div>
+              </div>
+
+              <div class="suggestion-card" data-prompt="Who is Lamine Yamal and why is everyone hyped about him?">
+                <div class="card-title">⭐ Wonderkid Scouting</div>
+                <div class="card-desc">Lamine Yamal, Bellingham, and the future of world ball.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Topic Chips -->
+      <div class="quick-tags-container" id="quickTags">
+        <button class="quick-tag" data-prompt="Who is the GOAT of football?">🐐 The GOAT</button>
+        <button class="quick-tag" data-prompt="Who won the 2024 Ballon d'Or?">🏆 2024 Ballon d'Or</button>
+        <button class="quick-tag" data-prompt="How many UCLs does Barcelona have?">🔵🔴 Barca UCLs</button>
+        <button class="quick-tag" data-prompt="Explain the offside rule in simple terms">📖 Offside Rule</button>
+        <button class="quick-tag" data-prompt="What makes Pep Guardiola a tactical genius?">🧠 Pep Tactics</button>
+        <button class="quick-tag" data-prompt="Who created this website?">👨‍💻 Who Created You?</button>
+      </div>
+
+      <!-- Input Bar Section -->
+      <div class="chat-input-area">
+        <div class="input-wrapper">
+          <div class="input-box">
+            <textarea
+              class="chat-textarea"
+              id="chatInput"
+              rows="1"
+              placeholder="Ask anything about football... (e.g. 'How many UCLs does Chelsea have?')"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" disabled title="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+          <div class="input-disclaimer">
+            Baller Homie AI • 100% Football Focused • Created with passion by <strong>Shaikh Saad</strong>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">Copied to clipboard! 📋</div>
+
+  <!-- Pure JavaScript Logic: Context-Aware, Sensible Football Intelligence Engine -->
+  <script>
+    (function () {
+      "use strict";
+
+      // ----------------------------------------------------
+      // App State & Sound Effects (Web Audio API Synthesizer)
+      // ----------------------------------------------------
+      let soundEnabled = true;
+      let isGenerating = false;
+
+      const playBeep = (freq = 480, duration = 0.05, type = "sine") => {
+        if (!soundEnabled) return;
+        try {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+          // AudioContext might be blocked until user interacts
+        }
+      };
+
+      // ----------------------------------------------------
+      // DOM Elements
+      // ----------------------------------------------------
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+      const menuToggleBtn = document.getElementById("menuToggleBtn");
+      const newChatBtn = document.getElementById("newChatBtn");
+      const clearChatBtn = document.getElementById("clearChatBtn");
+      const soundToggleBtn = document.getElementById("soundToggleBtn");
+      const soundIcon = document.getElementById("soundIcon");
+      const messagesContainer = document.getElementById("messagesContainer");
+      const messagesInner = document.getElementById("messagesInner");
+      const welcomeScreen = document.getElementById("welcomeScreen");
+      const chatInput = document.getElementById("chatInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const toast = document.getElementById("toast");
+
+      function showToast(text) {
+        toast.textContent = text;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+
+      function toggleSidebar() {
+        sidebar.classList.toggle("open");
+        sidebarOverlay.classList.toggle("open");
+      }
+
+      menuToggleBtn.addEventListener("click", toggleSidebar);
+      sidebarOverlay.addEventListener("click", toggleSidebar);
+
+      soundToggleBtn.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        soundIcon.textContent = soundEnabled ? "🔊" : "🔇";
+        showToast(soundEnabled ? "Audio effects enabled 🔊" : "Audio muted 🔇");
+      });
+
+      chatInput.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = Math.min(this.scrollHeight, 150) + "px";
+        sendBtn.disabled = !this.value.trim();
+      });
+
+      chatInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (!sendBtn.disabled && !isGenerating) {
+            handleSendMessage();
+          }
+        }
+      });
+
+      sendBtn.addEventListener("click", function () {
+        if (!sendBtn.disabled && !isGenerating) {
+          handleSendMessage();
+        }
+      });
+
+      function resetChat() {
+        if (isGenerating) return;
+        messagesInner.innerHTML = "";
+        messagesInner.appendChild(welcomeScreen);
+        welcomeScreen.style.display = "flex";
+        chatInput.value = "";
+        chatInput.style.height = "auto";
+        sendBtn.disabled = true;
+        showToast("Started a fresh football chat! ⚽");
+        playBeep(600, 0.08);
+      }
+
+      newChatBtn.addEventListener("click", () => {
+        resetChat();
+        if (window.innerWidth <= 768) toggleSidebar();
+      });
+
+      clearChatBtn.addEventListener("click", resetChat);
+
+      document.addEventListener("click", function (e) {
+        const card = e.target.closest(".suggestion-card") || e.target.closest(".history-item") || e.target.closest(".quick-tag");
+        if (card && card.dataset.prompt) {
+          const prompt = card.dataset.prompt;
+          chatInput.value = prompt;
+          chatInput.style.height = "auto";
+          sendBtn.disabled = false;
+          chatInput.focus();
+          handleSendMessage();
+          if (window.innerWidth <= 768 && sidebar.classList.contains("open")) {
+            toggleSidebar();
+          }
+        }
+      });
+
+      // ----------------------------------------------------
+      // Football Dictionaries for Off-Topic & Context Matching
+      // ----------------------------------------------------
+      const FOOTBALL_KEYWORDS = [
+        "football", "soccer", "ball", "goal", "goals", "messi", "ronaldo", "cr7", "mbappe", "haaland",
+        "bellingham", "vinicius", "vini", "yamal", "rodri", "guardiola", "pep", "klopp", "ancelotti",
+        "arteta", "mourinho", "flick", "alonso", "ten hag", "madrid", "barca", "barcelona", "arsenal",
+        "liverpool", "chelsea", "city", "united", "man utd", "spurs", "tottenham", "bayern", "dortmund",
+        "psg", "juventus", "milan", "inter", "atletico", "leverkusen", "champions league", "ucl",
+        "premier league", "epl", "la liga", "serie a", "bundesliga", "world cup", "euro", "copa america",
+        "ballon d'or", "ballon dor", "offside", "penalty", "penalties", "var", "referee", "red card",
+        "yellow card", "free kick", "corner", "hat-trick", "hattrick", "assist", "tiki taka", "gegenpress",
+        "gegenpressing", "false 9", "clean sheet", "derby", "clasico", "transfer", "signings", "fifa",
+        "uefa", "trophy", "trophies", "treble", "striker", "winger", "midfielder", "defender", "goalkeeper",
+        "origi", "aguero", "zidane", "ronaldinho", "r9", "pele", "maradona", "kaka", "iniesta", "xavi",
+        "salah", "saka", "palmer", "musiala", "wirtz", "pedri", "gavi", "kane", "son", "modric", "kroos",
+        "de bruyne", "foden", "alisson", "courtois", "neuer", "martinez", "van dijk", "saliba"
+      ];
+
+      // Explicit non-football topic signals
+      const NON_FOOTBALL_TOPICS = [
+        {
+          name: "coding or computer programming",
+          regex: /\b(python|javascript|java|c\+\+|coding|code|programmer|html|css|react|bug|algorithm|github|database|sql|api)\b/i
+        },
+        {
+          name: "math or science calculations",
+          regex: /\b(math|calculate|calculus|algebra|solve for x|equation|physics|chemistry|biology|quantum|2\+2|square root)\b/i
+        },
+        {
+          name: "cooking and food recipes",
+          regex: /\b(recipe|cook|pizza|pasta|burger|cake|bake|ingredients|bake a|dinner recipe)\b/i
+        },
+        {
+          name: "another sport (like cricket, basketball, or tennis)",
+          regex: /\b(basketball|nba|lebron|steph curry|cricket|ipl|virat kohli|dhoni|tennis|federer|nadal|djokovic|baseball|nfl|rugby|f1|formula 1|ufc|boxing)\b/i
+        },
+        {
+          name: "weather forecasts",
+          regex: /\b(weather|rain today|temperature outside|forecast|umbrella)\b/i
+        },
+        {
+          name: "crypto and stock trading",
+          regex: /\b(bitcoin|crypto|cryptocurrency|ethereum|stocks|trading|forex|invest in)\b/i
+        },
+        {
+          name: "movies, anime, or music",
+          regex: /\b(netflix|movie recommendation|anime|naruto|one piece|taylor swift|drake|album|song lyrics)\b/i
+        }
+      ];
+
+      // ----------------------------------------------------
+      // Intelligent Context & Intent Logic
+      // ----------------------------------------------------
+      function getSensibleAIResponse(rawInput) {
+        const input = rawInput.trim();
+        const lower = input.toLowerCase();
+
+        // 1. CREATOR & AUTHOR QUESTIONS (Shaikh Saad)
+        if (
+          lower.includes("shaikh") ||
+          lower.includes("saad") ||
+          /\b(who (created|made|built|programmed|developed) (you|this website|baller homie)|creator|developer|author)\b/i.test(lower)
+        ) {
+          return "Yo! **Baller Homie** was created and developed by the one and only **Shaikh Saad**! 👨‍💻⚽\n\nShaikh Saad built this entire website as an all-in-one platform with custom JavaScript logic so football fans can enjoy real, meaningful talk about the beautiful game anytime. Big credit to Shaikh Saad for making this possible! 🚀🔥";
+        }
+
+        // 2. CHECK FOR NON-FOOTBALL / OFF-TOPIC QUESTIONS
+        // First check explicit non-football categories
+        for (const topic of NON_FOOTBALL_TOPICS) {
+          if (topic.regex.test(lower)) {
+            return `Ayy homie, I noticed you're asking about **${topic.name}**! 😅\n\nJust to keep it 100 with you: I am **Baller Homie**, and my brain is strictly hardwired for **football (soccer)**! ⚽🧠 I don't give advice on other subjects, but I can break down any match, debate who the real GOAT is, or explain tactical masterclasses.\n\nLet's keep our eyes on the pitch! What's your favorite football club or player? Let's talk ball! 🏆🔥`;
+          }
+        }
+
+        // Check if query has absolutely zero football keywords and isn't a simple friendly greeting
+        const isGreeting = /^(hi|hello|hey|yo|sup|what's up|good morning|good evening|howdy)\b/i.test(lower);
+        const hasFootballTerm = FOOTBALL_KEYWORDS.some(term => lower.includes(term));
+
+        if (!hasFootballTerm && !isGreeting && input.length > 5) {
+          return `Yo baller! 🤙 That sounds like something outside the stadium!\n\nAs **Baller Homie**, I am an AI companion dedicated **strictly to football** talks. ⚽\n\nHere are some things we can discuss:\n* 🐐 **The GOAT Debate:** Messi vs. Cristiano Ronaldo\n* 🏆 **Champions League & Premier League:** Title races and predictions\n* 🧠 **Tactics & Rules:** Offside, False 9, Gegenpressing, or VAR drama\n* 👑 **Trophies & Stats:** How many UCLs does Real Madrid, Barcelona, or Chelsea have?\n\nDrop a football question and let's get into it! 🔥`;
+        }
+
+        // 3. GREETINGS & CASUAL INTROS
+        if (isGreeting && input.split(" ").length <= 4) {
+          return "Yo baller! What's good? 🤙⚽ Welcome to **Baller Homie**! I'm ready to talk pure football with you. What club do you support, and what's on your mind today?";
+        }
+
+        // 4. "HOW MANY UCLs / TROPHIES DOES [TEAM] HAVE?" (Direct, Sensible Answers)
+        if (/\b(how many|count of)\b/i.test(lower) && /\b(ucl|champions league|european cup)\b/i.test(lower)) {
+          if (lower.includes("madrid")) {
+            return "Real Madrid has won an unbelievable **15 UEFA Champions League titles**! 👑🏆\n\nThey won in 1956, 1957, 1958, 1959, 1960, 1998, 2000, 2002, 2014 (La Decima), 2016, 2017, 2018 (the 3-peat under Zidane), 2022, and 2024. Nobody in football history comes anywhere close to Los Blancos in Europe! ⚡";
+          }
+          if (lower.includes("barca") || lower.includes("barcelona")) {
+            return "FC Barcelona has won **5 UEFA Champions League trophies**! 🔵🔴\n\nTheir titles came in 1992 (Koeman's Wembley free kick), 2006 (Ronaldinho & Eto'o era), 2009 & 2011 (Pep Guardiola's peak tiki-taka with Messi, Xavi & Iniesta), and 2015 (the lethal MSN treble year).";
+          }
+          if (lower.includes("liverpool")) {
+            return "Liverpool has won **6 UEFA Champions League trophies**! 🔴🏆\n\nThey won in 1977, 1978, 1981, 1984, the legendary 2005 Miracle of Istanbul comeback against AC Milan, and 2019 under Jurgen Klopp at Madrid. They are England's most successful club in European history!";
+          }
+          if (lower.includes("bayern")) {
+            return "Bayern Munich has won **6 UEFA Champions League titles**! 🔴⚪\n\nThey lifted the trophy in 1974, 1975, 1976 (the Franz Beckenbauer era 3-peat), 2001, 2013 (Jupp Heynckes treble), and 2020 (Hansi Flick's ruthless 100% win-rate campaign).";
+          }
+          if (lower.includes("milan") && !lower.includes("inter")) {
+            return "AC Milan has won **7 UEFA Champions League trophies**! 🔴⚫\n\nOnly Real Madrid has more than them! Milan's European triumphs came in 1963, 1969, 1989, 1990, 1994 (that iconic 4-0 thrashing of Barcelona), 2003, and 2007 with Kaka in his Ballon d'Or prime.";
+          }
+          if (lower.includes("united") || lower.includes("man utd")) {
+            return "Manchester United has won **3 UEFA Champions League trophies**! 🔴\n\n* **1968:** Sir Matt Busby and George Best making history at Wembley.\n* **1999:** The unforgettable 2-minute injury time comeback against Bayern to complete the Treble!\n* **2008:** The Moscow rain penalty shootout victory against Chelsea with prime Cristiano Ronaldo and Wayne Rooney.";
+          }
+          if (lower.includes("chelsea")) {
+            return "Chelsea has won **2 UEFA Champions League trophies**! 🔵🏆\n\n* **2012:** Didier Drogba's 88th-minute header and winning penalty against Bayern Munich in their own stadium!\n* **2021:** Thomas Tuchel's masterclass 1-0 victory over Manchester City in Porto, with Kai Havertz scoring the winner.";
+          }
+          if (lower.includes("city") || lower.includes("man city")) {
+            return "Manchester City has won **1 UEFA Champions League trophy**! 🏆\n\nThey won it in Istanbul in **2023** against Inter Milan with Rodri's curling strike, completing a historic continental Treble under Pep Guardiola!";
+          }
+          if (lower.includes("arsenal")) {
+            return "Keeping it 100 with you bro: **Arsenal has 0 Champions League trophies** so far! 😅\n\nTheir closest run was reaching the 2006 Final in Paris, where Jens Lehmann was sent off early and they lost 2-1 to Barcelona. Mikel Arteta's squad is hungry to bring that first European Cup to North London!";
+          }
+        }
+
+        // 5. "WHAT IS OFFSIDE?" OR RULES EXPLANATION
+        if (lower.includes("offside")) {
+          return "Let's break down the **Offside Rule** simply so it makes total sense! 📖⚽\n\nA player is in an offside position if:\n1. They are in the opponent's half of the pitch, **AND**\n2. Any scoring part of their body (head, torso, legs) is **closer to the opponent's goal line than both the ball and the second-last opponent** (usually the last outfield defender, since the keeper is the last).\n\n**When is it a foul?**\nBeing in an offside position isn't a foul by itself. It ONLY becomes an infraction if your teammate passes the ball to you and you actively get involved in play or interfere with the opponent!\n\n*Pro-tip:* You **cannot** be offside directly from a throw-in, corner kick, or goal kick! 🧠💡";
+        }
+
+        // 6. "WHAT IS GEGENPRESSING / FALSE 9 / INVERTED FULLBACK?" (Tactics)
+        if (lower.includes("gegenpress") || lower.includes("gegenpressing")) {
+          return "Here's what **Gegenpressing** actually means in plain English! 🧠⚡\n\nPopularized by Ralf Rangnick and perfected by **Jurgen Klopp** at Dortmund and Liverpool, it literally means *'counter-pressing'*. \n\nInstead of falling back into defense when you lose possession, your team immediately swarms the opponent with 3-4 players for **5 to 8 seconds** while the opponent is still disoriented and unorganized.\n\nAs Klopp famously said: *'No playmaker in the world is as good as a good counter-pressing situation.'* If you win the ball 25 yards from the opponent's goal, you are one pass away from scoring! 🔥";
+        }
+
+        if (lower.includes("false 9") || lower.includes("false nine")) {
+          return "Here's what a **False 9** is! ♟️⚽\n\nNormally, a traditional striker (a Number 9 like Haaland or Lewandowski) stays high up the pitch to battle the opposing center-backs.\n\nA **False 9** drops deep into central midfield instead of staying in the box. This creates a nightmare dilemma for defenders:\n* If the center-back follows the False 9 into midfield, it leaves a huge empty hole behind for fast wingers to run into!\n* If the center-back stays back, the False 9 has all the time in the world to turn and pick a killer pass.\n\n*Best examples:* Lionel Messi in Pep Guardiola's 2009-2011 Barcelona, and Roberto Firmino in Klopp's prime Liverpool! 🪄";
+        }
+
+        if (lower.includes("inverted fullback")) {
+          return "An **Inverted Fullback** is a modern tactical tweak! 🔄\n\nTraditionally, fullbacks (number 2 and 3) run up and down the sideline to whip in crosses. An inverted fullback (like Trent Alexander-Arnold, John Stones, or Josko Gvardiol) tucks inside into the **central midfield** whenever their team has the ball.\n\nThis gives the team an extra passer in the middle of the pitch (creating a 3-2-4-1 shape), controls the tempo, and prevents counter-attacks right through the center! Pep Guardiola made this the gold standard in Europe. 🧠";
+        }
+
+        // 7. THE GOAT DEBATE: MESSI VS RONALDO
+        if (
+          (lower.includes("messi") && lower.includes("ronaldo")) ||
+          lower.includes("who is the goat") ||
+          lower.includes("goat of football")
+        ) {
+          return "Let's give you a sensible, honest breakdown of the **GOAT debate**! 🐐👑\n\n* **Lionel Messi 🇦🇷:** Completed football by winning the 2022 World Cup as player of the tournament. 8 Ballon d'Ors, 4 Champions Leagues, 800+ goals, and 370+ assists. He isn't just a deadly scorer; he is arguably the greatest playmaker and dribbler the world has ever witnessed.\n* **Cristiano Ronaldo 🇵🇹:** The ultimate machine and big-game clutch athlete. 5 Ballon d'Ors, 5 Champions Leagues, all-time international top scorer (130+ goals), and 900+ career goals. His longevity, aerial leap, and relentless hunger in clutch knockout games are unmatched.\n\n**The Verdict:** If you value pure magical artistry and playmaking, it's **Messi**. If you value ruthless athleticism, leadership, and pure clutch scoring, it's **CR7**. Both are legends, but winning the World Cup gave Messi that decisive edge for most fans. Who takes the crown for you, bro? 👀🔥";
+        }
+
+        // 8. MBAPPE VS HAALAND
+        if (
+          (lower.includes("mbappe") && lower.includes("haaland")) ||
+          (lower.includes("haaland") && lower.includes("mbappe"))
+        ) {
+          return "The clash of the next generation titans! 🤖⚡ Here is the sensible breakdown:\n\n* **Erling Haaland 🇳🇴:** The ultimate penalty-box predator. Physical powerhouse, 6'4\", lightning fast, and needs only 15 touches in a game to score a hat-trick. He broke the Premier League single-season goal record in his very first year with Man City.\n* **Kylian Mbappe 🇫🇷:** The complete dynamic game-changer. World Cup winner at 19, scored a hat-trick in the 2022 World Cup Final, and can create his own shot from 35 yards out with blistering acceleration.\n\n**The Difference:** Haaland relies on elite service to finish chances inside the box. Mbappe can take the ball from the halfway line on the wing, dribble past two defenders, and curl it in. If you want a pure striker, take Haaland. If you want a match-winner who can create out of nothing, take Mbappe! Who are you signing first? 💰⚽";
+        }
+
+        // 9. 2024 BALLON D'OR & RODRI / VINI JR
+        if (lower.includes("ballon d'or") || lower.includes("ballon dor")) {
+          return "The **2024 Ballon d'Or** was won by **Rodri** (Manchester City & Spain)! 🏆🇪🇸\n\n**Did he deserve it?**\nYes! Rodri went on an unreal **74-game unbeaten streak** with Manchester City, won the Premier League, and won Euro 2024 where he was named Player of the Tournament. It was a massive win for defensive midfielders who usually get overlooked for flashy forwards.\n\n**The Controversy:**\nVinicius Jr and Real Madrid boycotted the ceremony because they believed Vini deserved it after his devastating Champions League campaign (scoring in the final and tearing Dortmund and Bayern apart). Both had world-class arguments, but Rodri took the crown! 🤝";
+        }
+
+        // 10. PREMIER LEAGUE TITLE RACE & CLUBS
+        if (lower.includes("premier league") || lower.includes("epl")) {
+          return "The Premier League title race is always the most brutal marathon in world football! 🏴󠁧󠁢󠁥󠁮󠁧󠁿🏆\n\n* **Manchester City:** Pep's side has the championship muscle memory and depth to go on 12-game winning streaks every spring.\n* **Arsenal:** Arteta built arguably the best defensive pairing in Europe with Saliba and Gabriel, making them nearly impossible to break down.\n* **Liverpool:** Transitioning smoothly post-Klopp under Arne Slot with explosive wing play and rock-solid midfield control.\n\nEvery dropped point against away teams like Newcastle or Aston Villa changes the title race. Who's your money on to lift the trophy this season, homie? ⚡";
+        }
+
+        // 11. REAL MADRID & UCL MAGIC
+        if (lower.includes("real madrid") || lower.includes("madrid")) {
+          return "Real Madrid is the undisputed king of European football! 👑⚪\n\nWith 15 Champions League trophies, their aura under the Santiago Bernabeu floodlights is unlike anything in sports. Even when they look out of a game in the 88th minute, they find a way to score two goals in two minutes. Now with Kylian Mbappe joining Vinicius Jr and Jude Bellingham under Don Carlo Ancelotti, their firepower is absurd! What do you think of Madrid's squad right now, baller? 🔥";
+        }
+
+        // 12. BARCELONA & LAMINE YAMAL
+        if (lower.includes("barcelona") || lower.includes("barca") || lower.includes("yamal")) {
+          return "FC Barcelona is cooking with pure youth magic right now! 🔵🔴\n\nUnder Hansi Flick, Barca has returned to high-intensity, fearless attacking football with an aggressive offside trap. And **Lamine Yamal**? The boy is playing like a seasoned superstar at just 17 years old! His Euro 2024 campaign with Spain proved he is a generational prodigy. Coupled with Pedri, Gavi, and Lewandowski firing, the vibes at Camp Nou are back! 💫";
+        }
+
+        // 13. LIVERPOOL / ARSENAL / MAN UNITED / CHELSEA
+        if (lower.includes("arsenal")) {
+          return "Arsenal under Mikel Arteta has transformed into a legitimate European powerhouse! 🔴⚪\n\nSaliba and Gabriel form the most disciplined center-back wall in the league, Bukayo Saka is consistent world-class quality on the right wing, and Declan Rice provides immense midfield control. The only thing missing to cement this team in history is lifting that Premier League or Champions League trophy! Can they do it, bro? 🏆";
+        }
+
+        if (lower.includes("liverpool")) {
+          return "Liverpool has shown incredible character and tactical maturity! 🔴\n\nAfter Jurgen Klopp's iconic 9-year tenure, Arne Slot stepped in and kept the team at the absolute top of the table. Virgil van Dijk remains an absolute colossus at the back, and Mohamed Salah continues to break goal records every season. Anfield under the lights is still the loudest stadium in England! 🔥";
+        }
+
+        if (lower.includes("united") || lower.includes("man utd")) {
+          return "Manchester United is in the middle of a major rebuilding era! 🔴\n\nUnder the new INEOS sporting structure, the focus is finally shifting toward younger, hungry talents like Kobbie Mainoo, Alejandro Garnacho, and Rasmus Hojlund. The standard at Old Trafford will always be demanding trophies like in the Sir Alex Ferguson glory days, so fans are eager to see steady progress! What changes does United need most, homie? 💭";
+        }
+
+        if (lower.includes("chelsea")) {
+          return "Chelsea has one of the youngest and deepest squads in world football! 🔵\n\nAnd let's talk about **Cole Palmer**—the man has pure ice in his veins! 🥶 Whether it's scoring 4 goals in a single half or converting 95th-minute penalties without blinking, he has carried Chelsea's attack with swagger. Under Enzo Maresca, their attacking combinations are clicking more and more! ⚡";
+        }
+
+        // 14. MATCHDAY FEELINGS (My team won / lost)
+        if (/\b(we lost|my team lost|lost today|lost the match|we got cooked|heartbroken)\b/i.test(lower)) {
+          return "Ah bro, I feel your pain! 😩💔 Football has a cruel way of ruining your entire weekend in 90 minutes.\n\nWho broke your heart today? Did your striker miss a sitter or did the referee give a ridiculous penalty? Vent to me, homie. Just remember: there is always the next fixture, and loyalty through the rough games is what makes you a real fan! Keep your head high! 💪⚽";
+        }
+
+        if (/\b(we won|my team won|won today|scored a screamer|what a win)\b/i.test(lower)) {
+          return "LETS GOOOO! 🔥🎉 Nothing hits better than matchday victory vibes! What a result, bro! Who scored the winning goal, and are you celebrating all night? Tell me all the details! ⚽🥂";
+        }
+
+        // 15. DEFAULT SENSIBLE FOOTBALL RESPONSE
+        // When user asks a football question that didn't hit a specific rule
+        return `Bro, that is a solid football question! ⚽🔥\n\nWhen you look at modern football at the top level, matches are decided by tiny margins—tactical discipline in defensive transitions, chemistry between the front three, and who controls the midfield tempo. \n\nEvery top club faces huge pressure to adapt, whether playing against low blocks or dealing with congested fixture schedules. \n\nWhat is your personal take on this, homie? Let's hear your verdict! 🎙️👀`;
+      }
+
+      // ----------------------------------------------------
+      // Chat UI Rendering & Word-by-Word Streaming
+      // ----------------------------------------------------
+      function createMessageElement(text, sender = "bot") {
+        const row = document.createElement("div");
+        row.className = `message-row ${sender}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = `message-avatar ${sender}`;
+        avatar.innerHTML = sender === "bot" ? "⚽" : "👤";
+
+        const contentWrapper = document.createElement("div");
+        contentWrapper.className = "message-content-wrapper";
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+        bubble.innerHTML = formatMarkdown(text);
+
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+
+        const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const timeSpan = document.createElement("span");
+        timeSpan.textContent = time;
+        meta.appendChild(timeSpan);
+
+        if (sender === "bot") {
+          const actions = document.createElement("div");
+          actions.className = "message-actions";
+
+          const copyBtn = document.createElement("button");
+          copyBtn.className = "msg-btn";
+          copyBtn.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Copy</span>
+          `;
+          copyBtn.addEventListener("click", () => {
+            navigator.clipboard.writeText(text).then(() => showToast("Copied to clipboard! 📋"));
+          });
+
+          actions.appendChild(copyBtn);
+          meta.appendChild(actions);
+        }
+
+        contentWrapper.appendChild(bubble);
+        contentWrapper.appendChild(meta);
+
+        if (sender === "user") {
+          row.appendChild(contentWrapper);
+          row.appendChild(avatar);
+        } else {
+          row.appendChild(avatar);
+          row.appendChild(contentWrapper);
+        }
+
+        return { row, bubble };
+      }
+
+      function formatMarkdown(text) {
+        let escaped = text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+        // Bold: **text**
+        escaped = escaped.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        // Italic: *text*
+        escaped = escaped.replace(/\*(.*?)\*/g, "<em>$1</em>");
+
+        const lines = escaped.split("\n");
+        let inList = false;
+        let result = [];
+
+        for (let line of lines) {
+          if (line.trim().startsWith("* ")) {
+            if (!inList) {
+              result.push("<ul>");
+              inList = true;
+            }
+            result.push(`<li>${line.trim().substring(2)}</li>`);
+          } else {
+            if (inList) {
+              result.push("</ul>");
+              inList = false;
+            }
+            if (line.trim()) {
+              result.push(`<p>${line}</p>`);
+            }
+          }
+        }
+        if (inList) result.push("</ul>");
+
+        return result.join("");
+      }
+
+      function showTypingIndicator() {
+        const row = document.createElement("div");
+        row.className = "message-row bot typing-row";
+        row.id = "typingRow";
+
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar bot";
+        avatar.innerHTML = "⚽";
+
+        const contentWrapper = document.createElement("div");
+        contentWrapper.className = "message-content-wrapper";
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+        bubble.innerHTML = `
+          <div class="typing-indicator">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        `;
+
+        contentWrapper.appendChild(bubble);
+        row.appendChild(avatar);
+        row.appendChild(contentWrapper);
+
+        messagesInner.appendChild(row);
+        scrollToBottom();
+      }
+
+      function removeTypingIndicator() {
+        const row = document.getElementById("typingRow");
+        if (row) row.remove();
+      }
+
+      function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function streamBotMessage(fullText) {
+        removeTypingIndicator();
+
+        const { row, bubble } = createMessageElement("", "bot");
+        messagesInner.appendChild(row);
+
+        const words = fullText.split(" ");
+        let currentIndex = 0;
+        let displayedText = "";
+
+        const interval = setInterval(() => {
+          if (currentIndex < words.length) {
+            displayedText += (currentIndex === 0 ? "" : " ") + words[currentIndex];
+            bubble.innerHTML = formatMarkdown(displayedText);
+            currentIndex++;
+            scrollToBottom();
+            if (currentIndex % 3 === 0) {
+              playBeep(520, 0.02);
+            }
+          } else {
+            clearInterval(interval);
+            isGenerating = false;
+            sendBtn.disabled = !chatInput.value.trim();
+            playBeep(640, 0.06);
+          }
+        }, 28);
+      }
+
+      function handleSendMessage() {
+        const text = chatInput.value.trim();
+        if (!text || isGenerating) return;
+
+        if (welcomeScreen.style.display !== "none") {
+          welcomeScreen.style.display = "none";
+        }
+
+        const { row: userRow } = createMessageElement(text, "user");
+        messagesInner.appendChild(userRow);
+
+        chatInput.value = "";
+        chatInput.style.height = "auto";
+        sendBtn.disabled = true;
+        isGenerating = true;
+        scrollToBottom();
+        playBeep(420, 0.04);
+
+        showTypingIndicator();
+
+        const delay = Math.floor(Math.random() * 300) + 400;
+        setTimeout(() => {
+          const botResponse = getSensibleAIResponse(text);
+          streamBotMessage(botResponse);
+        }, delay);
+      }
+
+      chatInput.focus();
+    })();
+  </script>
+</body>
+</html>
